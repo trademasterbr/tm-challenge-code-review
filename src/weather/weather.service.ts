@@ -1,28 +1,28 @@
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 import { WeatherResponseData } from "./weather.response.data";
 import { catchError, firstValueFrom } from "rxjs";
-import { AxiosError, AxiosHeaders } from "axios";
+import { AxiosError } from "axios";
 import { HttpService } from "@nestjs/axios";
 
 @Injectable()
 export class WeatherService {
 
+  private rc = {
+    headers: {
+      'X-Api-Key': 'x7x1/ROfdQInbFu1j60j7g==qDJQLrZgbMHe5Azr',
+      'Content-Type': 'application/json'
+    }
+  };
+
   constructor(private readonly httpService: HttpService) { }
   
   async getCity(city: any): Promise<WeatherResponseData> {
-  
     try {
-      let rc = {
-        headers: {
-          'X-Api-Key': 'x7x1/ROfdQInbFu1j60j7g==qDJQLrZgbMHe5Azr',
-          'Content-Type': 'application/json'
-        }
-    };
       const { data } = await firstValueFrom(
-        this.httpService.get<WeatherResponseData>(`https://api.api-ninjas.com/v1/weather?city=${city.city}`, rc).pipe(
+        this.httpService.get<WeatherResponseData>(`https://api.api-ninjas.com/v1/weather?city=${city.city}`, this.rc).pipe(
           catchError((error: AxiosError) => {
-            console.log(error.response.data);
-            throw error.response.data;
+            console.error(error);
+            throw error.response?.data || error.message || 'Erro desconhecido ao obter dados do clima.';
           })
         )
       );
@@ -35,35 +35,42 @@ export class WeatherService {
   }
 
   async getCities(cities: any): Promise<Array<WeatherResponseData>> {
-    let x: Array<WeatherResponseData>
-    cities.array.forEach(async element => {
+    const errors = [];
+    const requests = cities.map(async (city) => {
       try {
-        let rc = {
-          headers: {
-            'X-Api-Key': 'x7x1/ROfdQInbFu1j60j7g==qDJQLrZgbMHe5Azr',
-            'Content-Type': 'application/json'
-          }
-      };
         const { data } = await firstValueFrom(
-          this.httpService.get<WeatherResponseData>(`https://api.api-ninjas.com/v1/weather?city=${city.city}`, rc).pipe(
+          this.httpService.get<WeatherResponseData>(`https://api.api-ninjas.com/v1/weather?city=${city.city}`, this.rc).pipe(
             catchError((error: AxiosError) => {
-              console.log(error.response.data);
-              throw error.response.data;
+              console.error(error);
+              throw error.response?.data || error.message || 'Erro desconhecido ao obter dados do clima.';
             })
           )
         );
-        x.push(data);
-      } catch(err) {
-        throw new InternalServerErrorException({
-          descriptionOrOptions: err,
-        });
+        return data;
+      } catch (err) {
+        errors.push(err);
       }
     });
-    return x;
+
+    const results = await Promise.all(requests);
+    
+    if (errors.length > 0) {
+      throw new InternalServerErrorException({
+        descriptionOrOptions: errors,
+      });
+    }
+
+    return results;
   }
 
   async getMedia(city: any): Promise<string> {
-    let response = this.getCity(city);
-    return `${(response.max_temp + await response.min_temp) / 2}`
+    try {
+      const response = await this.getCity(city);
+      return `${(response.max_temp + response.min_temp) / 2}`;
+    } catch (err) {
+      throw new InternalServerErrorException({
+        descriptionOrOptions: err,
+      });
+    }
   }
 }
