@@ -1,18 +1,7 @@
-# Weather Forecast API
+Teste Code review e Funcional:
 
-![Weather Forecast API](https://static.wikia.nocookie.net/jjba/images/c/c7/Weather_report_profile.png/revision/latest?cb=20230202132139)
+Um desenvolvedor com pouca experiência começou a criar a API, porém não seguiu boas práticas de design de código e arquitetura.
 
-Installation: `npm install`
-Running: `npm run start:dev`
+Usando sua experiência em desenvolvimento de software, patterns de code design, faça um Code Review completo. Leve em conta que essa API irá crescer bastante, terá muitos contribuidores e precisa ter uma boa manutenibilidade. Sinta-se à vontade para criticar, modificar e melhorar o código.
 
-Endpoint: http://localhost:3000/?city=New York
-
-Response:
-
-```
-{
-  "minTemp": 0,
-  "maxTemp": 4,
-  "averageTemp": 2
-}
-```
+Realize um Fork do projeto e abra uma PR própria em seu fork com a review.
